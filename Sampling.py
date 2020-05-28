@@ -1,34 +1,21 @@
-from typing import Optional
+from typing import Optional, List, Tuple, Union
 
-from scipy.optimize import minimize_scalar
 import numpy as np
-
-from utils import timer
-
-
-def rejection(pdf, c: Optional[float] = None) -> np.ndarray:
-    if not c:
-        c = -minimize_scalar(lambda x: -pdf(x), bounds=(0, 1), method='bounded', tol=1e-10).fun
-    sample = []
-    while len(sample) < 1:
-        u1 = np.random.uniform(0, 1, 1)
-        u2 = np.random.uniform(0, 1, 1)
-        if u2 <= pdf(u1) / c:
-            sample.append(u1)
-    return np.array(sample).flatten()
 
 
 class MetropolisHastingsSymmetric:
-    def __init__(self, target, proposal, initial: Optional[float] = None):
+    def __init__(self, target, proposal, initial: Optional[float] = None,
+                 shape: Optional[Union[Tuple[int], List[int]]] = None):
         self.target = target
         self.proposal = proposal
+        assert initial or shape, 'At least one of the initial or shape arguments must be specified!'
         if initial:
-            self.initial = initial
+            self.initial = np.array(initial)
         else:
-            self.initial = np.random.uniform(0, 1, 1)
+            self.initial = np.random.uniform(low=-1, high=1, size=shape)
 
     def run(self, size: int, burnin: Optional[int] = 1000, verbose: int = 0):
-        sample = np.empty(size + burnin)
+        sample = np.empty((size + burnin, *self.initial.shape))
         sample[0] = self.initial
         u = np.random.uniform(0, 1, size + burnin)
         counter = 1
@@ -36,7 +23,7 @@ class MetropolisHastingsSymmetric:
             # propose
             current_x = sample[i - 1]
             proposed = self.proposal.sample(current_x)
-            # acceptance proability
+            # acceptance probability
             a = np.min([1, self.target(proposed) / self.target(current_x)])
             # reject or accept
             if u[i] < a:
@@ -52,16 +39,18 @@ class MetropolisHastingsSymmetric:
 
 
 class MetropolisHastings:
-    def __init__(self, target, proposal, initial: Optional[float] = None):
+    def __init__(self, target, proposal, initial: Optional[float] = None,
+                 shape: Optional[Union[Tuple[int], List[int]]] = None):
         self.target = target
         self.proposal = proposal
+        assert initial or shape, 'At least one of the initial or shape arguments must be specified!'
         if initial:
-            self.initial = initial
+            self.initial = np.array(initial)
         else:
-            self.initial = np.random.uniform(0, 1, 1)
+            self.initial = np.random.uniform(low=-1, high=1, size=shape)
 
     def run(self, size: int, burnin: Optional[int] = 1000, verbose: int = 0):
-        sample = np.empty(size + burnin)
+        sample = np.empty((size + burnin, *self.initial.shape))
         sample[0] = self.initial
         u = np.random.uniform(0, 1, size + burnin)
         counter = 1
