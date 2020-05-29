@@ -14,7 +14,7 @@ class MetropolisHastingsSymmetric:
         else:
             self.initial = np.random.uniform(low=-1, high=1, size=shape)
 
-    def run(self, size: int, burnin: Optional[int] = 1000, verbose: int = 0):
+    def run(self, size: int, burnin: Optional[int] = 1000, thinning: int = 1, verbose: int = 0):
         sample = np.empty((size + burnin, *self.initial.shape))
         sample[0] = self.initial
         u = np.random.uniform(0, 1, size + burnin)
@@ -35,7 +35,7 @@ class MetropolisHastingsSymmetric:
         if verbose > 0:
             print("Proportion of samples accepted: {}%".format(round(counter / (size + burnin) * 100, 2)))
 
-        return sample[burnin:]
+        return sample[burnin:][::thinning]
 
 
 class MetropolisHastings:
@@ -49,7 +49,7 @@ class MetropolisHastings:
         else:
             self.initial = np.random.uniform(low=-1, high=1, size=shape)
 
-    def run(self, size: int, burnin: Optional[int] = 1000, verbose: int = 0):
+    def run(self, size: int, burnin: Optional[int] = 1000, thinning: int = None, verbose: int = 0):
         sample = np.empty((size + burnin, *self.initial.shape))
         sample[0] = self.initial
         u = np.random.uniform(0, 1, size + burnin)
@@ -71,4 +71,5 @@ class MetropolisHastings:
         if verbose > 0:
             print("Proportion of samples accepted: {}%".format(round(counter / (size + burnin) * 100, 2)))
 
-        return sample[burnin:]
+        return sample[burnin:][::thinning]
+    
