@@ -1,75 +1,109 @@
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Callable
 
 import numpy as np
 
+from ProposalDistribution import ProposalDistribution
+
+
+# TODO: deal with overflow
 
 class MetropolisHastingsSymmetric:
-    def __init__(self, target, proposal, initial: Optional[float] = None,
+    def __init__(self, target: Callable, proposal: ProposalDistribution,
+                 initial: Optional[Union[float, np.ndarray]] = None,
                  shape: Optional[Union[Tuple[int], List[int]]] = None):
-        self.target = target
-        self.proposal = proposal
+        self.target: Callable = target
+        self.proposal: ProposalDistribution = proposal
+        self.accepted: float = 0
+        self.sample: Optional[np.ndarray] = None
+        self.used: bool = False
         assert initial or shape, 'At least one of the initial or shape arguments must be specified!'
         if initial:
-            self.initial = np.array(initial)
+            self.initial: np.ndarray = np.array(initial)
         else:
-            self.initial = np.random.uniform(low=-1, high=1, size=shape)
+            self.initial: np.ndarray = np.random.uniform(low=-1, high=1, size=shape)
 
-    def run(self, size: int, burnin: Optional[int] = 1000, thinning: int = 1, verbose: int = 0):
-        sample = np.empty((size + burnin, *self.initial.shape))
-        sample[0] = self.initial
+    def run(self, size: int, burnin: Optional[int] = 1000, thinning: Optional[int] = None, verbose: int = 0):
+        if self.used:
+            self.initial = self.sample[-1]
+            burnin = 0
+        self.sample = np.empty((size + burnin, *self.initial.shape))
+        self.sample[0] = self.initial
         u = np.random.uniform(0, 1, size + burnin)
-        counter = 1
-        for i in range(1, size + burnin):
-            # propose
-            current_x = sample[i - 1]
+        counter = 0
+
+        for i in range(burnin):
+            current_x = self.sample[i - 1]
             proposed = self.proposal.sample(current_x)
-            # acceptance probability
             a = np.min([1, self.target(proposed) / self.target(current_x)])
-            # reject or accept
+            if u[i] < a:
+                self.sample[i] = proposed
+            else:
+                self.sample[i] = current_x
+        for i in range(burnin, size + burnin):
+            current_x = self.sample[i - 1]
+            proposed = self.proposal.sample(current_x)
+            a = np.min([1, self.target(proposed) / self.target(current_x)])
             if u[i] < a:
                 counter += 1
-                sample[i] = proposed
+                self.sample[i] = proposed
             else:
-                sample[i] = current_x
+                self.sample[i] = current_x
 
+        self.accepted = counter / size * 100
         if verbose > 0:
-            print("Proportion of samples accepted: {}%".format(round(counter / (size + burnin) * 100, 2)))
+            print("Proportion of samples accepted: {}%".format(round(counter / size * 100, 2)))
 
-        return sample[burnin:][::thinning]
+        self.used = True
+        return self.sample[burnin:][::thinning]
 
 
 class MetropolisHastings:
-    def __init__(self, target, proposal, initial: Optional[float] = None,
+    def __init__(self, target: Callable, proposal: ProposalDistribution,
+                 initial: Optional[Union[float, np.ndarray]] = None,
                  shape: Optional[Union[Tuple[int], List[int]]] = None):
-        self.target = target
-        self.proposal = proposal
+        self.target: Callable = target
+        self.proposal: ProposalDistribution = proposal
+        self.accepted: float = 0
+        self.sample: Optional[np.ndarray] = None
+        self.used: bool = False
         assert initial or shape, 'At least one of the initial or shape arguments must be specified!'
         if initial:
-            self.initial = np.array(initial)
+            self.initial: np.ndarray = np.array(initial)
         else:
-            self.initial = np.random.uniform(low=-1, high=1, size=shape)
+            self.initial: np.ndarray = np.random.uniform(low=-1, high=1, size=shape)
 
-    def run(self, size: int, burnin: Optional[int] = 1000, thinning: int = None, verbose: int = 0):
-        sample = np.empty((size + burnin, *self.initial.shape))
-        sample[0] = self.initial
+    def run(self, size: int, burnin: Optional[int] = 1000, thinning: Optional[int] = None, verbose: int = 0):
+        if self.used:
+            self.initial = self.sample[-1]
+            burnin = 0
+        self.sample = np.empty((size + burnin, *self.initial.shape))
+        self.sample[0] = self.initial
         u = np.random.uniform(0, 1, size + burnin)
-        counter = 1
-        for i in range(1, size + burnin):
-            # propose
-            current_x = sample[i - 1]
+        counter = 0
+
+        for i in range(burnin):
+            current_x = self.sample[i - 1]
             proposed = self.proposal.sample(current_x)
-            # acceptance proability
             a = np.min([1, (self.target(proposed) * self.proposal.pdf(current_x, proposed)) /
                         (self.target(current_x) * self.proposal.pdf(proposed, current_x))])
-            # reject or accept
+            if u[i] < a:
+                self.sample[i] = proposed
+            else:
+                self.sample[i] = current_x
+        for i in range(burnin, size + burnin):
+            current_x = self.sample[i - 1]
+            proposed = self.proposal.sample(current_x)
+            a = np.min([1, (self.target(proposed) * self.proposal.pdf(current_x, proposed)) /
+                        (self.target(current_x) * self.proposal.pdf(proposed, current_x))])
             if u[i] < a:
                 counter += 1
-                sample[i] = proposed
+                self.sample[i] = proposed
             else:
-                sample[i] = current_x
+                self.sample[i] = current_x
 
+        self.accepted = counter / size * 100
         if verbose > 0:
-            print("Proportion of samples accepted: {}%".format(round(counter / (size + burnin) * 100, 2)))
+            print("Proportion of samples accepted: {}%".format(round(counter / size * 100, 2)))
 
-        return sample[burnin:][::thinning]
-    
+        self.used = True
+        return self.sample[burnin:][::thinning]

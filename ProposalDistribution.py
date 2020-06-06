@@ -32,10 +32,12 @@ class ProposalDistribution(metaclass=ABCMeta):
 
 
 class Normal(ProposalDistribution):
-    def __init__(self, mean: float, std: float):
+    __slots__ = ['mean', 'std']
+
+    def __init__(self, mean: float, spread: float):
         super().__init__()
         self.mean = mean
-        self.std = std
+        self.std = spread
         assert self.std > 0, "Wrong specification of distribution!"
 
     def sample(self, x):
@@ -46,6 +48,8 @@ class Normal(ProposalDistribution):
 
 
 class Uniform(ProposalDistribution):
+    __slots__ = ['spread']
+
     def __init__(self, spread: float):
         super().__init__()
         self.spread = spread
