@@ -1,20 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from typing import Optional
 
 import numpy as np
-from scipy.optimize import minimize_scalar
-
-
-def rejection(pdf, c: Optional[float] = None) -> np.ndarray:
-    if not c:
-        c = -minimize_scalar(lambda x: -pdf(x), bounds=(0, 1), method='bounded', tol=1e-10).fun
-    sample = []
-    while len(sample) < 1:
-        u1 = np.random.uniform(0, 1, 1)
-        u2 = np.random.uniform(0, 1, 1)
-        if u2 <= pdf(u1) / c:
-            sample.append(u1)
-    return np.array(sample).flatten()
 
 
 class ProposalDistribution(metaclass=ABCMeta):
