@@ -10,6 +10,7 @@ from utils import timer
 
 
 # TODO: remove shape parameter
+# TODO: replicability
 
 class AutoSample:
     def __init__(self, target: Callable, shape: Union[Tuple[int], List[int]], symmetric: bool = False, njobs: int = -1):
