@@ -1,3 +1,4 @@
+import pytest
 from numpy.testing import assert_array_almost_equal
 
 from ProposalDistribution import Uniform
@@ -16,6 +17,7 @@ class Test_MetropolisHastingsSymmetric:
     def test_shape(self):
         assert_array_almost_equal(self.algo.initial, np.array([0.39293837]))
 
+    @pytest.mark.filterwarnings('ignore::RuntimeWarning')
     def test_sample(self):
         assert_array_almost_equal(self.algo.run(burnin=100, size=1), np.array([[0.29147929]]))
 
@@ -32,5 +34,6 @@ class Test_MetropolisHastings:
     def test_shape(self):
         assert_array_almost_equal(self.algo.initial, np.array([0.39293837]))
 
+    @pytest.mark.filterwarnings('ignore::RuntimeWarning')
     def test_sample(self):
         assert_array_almost_equal(self.algo.run(burnin=100, size=1), np.array([[0.25026542]]))
