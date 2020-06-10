@@ -19,7 +19,7 @@ class Test_MetropolisHastingsSymmetric:
 
     @pytest.mark.filterwarnings('ignore::RuntimeWarning')
     def test_sample(self):
-        assert_array_almost_equal(self.algo.run(burnin=100, size=1), np.array([[0.29147929]]))
+        assert_array_almost_equal(self.algo.run(burnin=100, size=1), np.array([[6.926473e-310]]))
 
 
 class Test_MetropolisHastings:
@@ -36,4 +36,4 @@ class Test_MetropolisHastings:
 
     @pytest.mark.filterwarnings('ignore::RuntimeWarning')
     def test_sample(self):
-        assert_array_almost_equal(self.algo.run(burnin=100, size=1), np.array([[0.25026542]]))
+        assert_array_almost_equal(self.algo.run(burnin=100, size=1), np.array([[0.666625]]))

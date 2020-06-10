@@ -16,8 +16,8 @@ class MetropolisHastingsSymmetric:
         self.accepted: float = 0
         self.sample: Optional[np.ndarray] = None
         self.used: bool = False
-        assert initial or shape, 'At least one of the initial or shape arguments must be specified!'
-        if initial:
+        assert initial is not None or shape, 'At least one of the initial or shape arguments must be specified!'
+        if initial is not None:
             self.initial: np.ndarray = np.array(initial)
         else:
             self.initial: np.ndarray = np.random.uniform(low=-1, high=1, size=shape)
@@ -31,7 +31,7 @@ class MetropolisHastingsSymmetric:
         u = np.random.uniform(0, 1, size + burnin)
         counter = 0
 
-        for i in range(burnin):
+        for i in range(1, burnin):
             current_x = self.sample[i - 1]
             proposed = self.proposal.sample(current_x)
             a = np.min([1, self.target(proposed) / self.target(current_x)])
@@ -39,7 +39,7 @@ class MetropolisHastingsSymmetric:
                 self.sample[i] = proposed
             else:
                 self.sample[i] = current_x
-        for i in range(burnin, size + burnin):
+        for i in range(burnin + 1, size + burnin):
             current_x = self.sample[i - 1]
             proposed = self.proposal.sample(current_x)
             a = np.min([1, self.target(proposed) / self.target(current_x)])
@@ -66,8 +66,8 @@ class MetropolisHastings:
         self.accepted: float = 0
         self.sample: Optional[np.ndarray] = None
         self.used: bool = False
-        assert initial or shape, 'At least one of the initial or shape arguments must be specified!'
-        if initial:
+        assert initial is not None or shape, 'At least one of the initial or shape arguments must be specified!'
+        if initial is not None:
             self.initial: np.ndarray = np.array(initial)
         else:
             self.initial: np.ndarray = np.random.uniform(low=-1, high=1, size=shape)
@@ -81,7 +81,7 @@ class MetropolisHastings:
         u = np.random.uniform(0, 1, size + burnin)
         counter = 0
 
-        for i in range(burnin):
+        for i in range(1, burnin):
             current_x = self.sample[i - 1]
             proposed = self.proposal.sample(current_x)
             a = np.min([1, (self.target(proposed) * self.proposal.pdf(current_x, proposed)) /
@@ -90,7 +90,7 @@ class MetropolisHastings:
                 self.sample[i] = proposed
             else:
                 self.sample[i] = current_x
-        for i in range(burnin, size + burnin):
+        for i in range(burnin + 1, size + burnin):
             current_x = self.sample[i - 1]
             proposed = self.proposal.sample(current_x)
             a = np.min([1, (self.target(proposed) * self.proposal.pdf(current_x, proposed)) /
